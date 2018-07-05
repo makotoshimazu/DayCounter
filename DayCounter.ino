@@ -1,4 +1,6 @@
 //
+// DayCounter.ino
+//
 // Copyright 2018 Makoto Shimazu
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +18,7 @@
 
 #include <epd2in13.h>
 #include <epdpaint.h>
+#include <utils.h>
 
 namespace {
 
@@ -31,21 +34,6 @@ static epd::Paint s_paint(s_image, 0, 0);
 static epd::Epd s_epd;
 
 static uint32_t s_time_start_ms;
-
-class ScopedTimer {
- public:
-  ScopedTimer(const char* tag) : start_us_(micros()), tag_(tag) {}
-  ~ScopedTimer() {
-    Serial.print(tag_);
-    Serial.print(": ");
-    Serial.print(micros() - start_us_);
-    Serial.println(" us");
-  }
-
- private:
-  const char* tag_;
-  uint32_t start_us_;
-};
 
 }  // namespace
 

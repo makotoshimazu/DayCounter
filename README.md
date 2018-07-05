@@ -9,12 +9,14 @@ Count days since a reset button is long pressed.
    ```
     $ git clone https://github.com/makotoshimazu/DayCounter.git
     $ cd DayCounter
-    $ ln -s $(pwd)/libraries ~/Arduino/libraries/EPD
+    $ ln -s $(pwd)/EPD ~/Arduino/libraries/EPD
+    $ ln -s $(pwd)/DayCounterLib ~/Arduino/libraries/DayCounterLib
    ```
 
 2. Open the sketch from Arduino
 3. Select `EPD` from `Sketch` > `Include library` in the menu
-4. Select an appropriate board from `Tools` > `Board`
-5. Write!
+4. Select `DayCounterLib` from `Sketch` > `Include library` in the menu
+5. Select an appropriate board from `Tools` > `Board`
+6. Write!
 
 
