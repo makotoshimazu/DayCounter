@@ -36,6 +36,8 @@
 #define CS_PIN          10
 #define BUSY_PIN        7
 
+namespace epd {
+
 class EpdIf {
 public:
     EpdIf(void);
@@ -47,5 +49,7 @@ public:
     static void DelayMs(unsigned int delaytime);
     static void SpiTransfer(unsigned char data);
 };
+
+}  // namespace epd
 
 #endif

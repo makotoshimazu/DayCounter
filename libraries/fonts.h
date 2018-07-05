@@ -45,7 +45,9 @@
 #define OFFSET_BITMAP           54
 
 #ifdef __cplusplus
- extern "C" {
+namespace epd {
+
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -67,6 +69,8 @@ extern sFONT Font8;
 
 #ifdef __cplusplus
 }
+
+}  // namespace epd
 #endif
   
 #endif /* __FONTS_H */

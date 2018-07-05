@@ -38,6 +38,8 @@
 
 #include "fonts.h"
 
+namespace epd {
+
 class Paint {
 public:
     Paint(unsigned char* image, int width, int height);
@@ -68,6 +70,8 @@ private:
     int height;
     int rotate;
 };
+
+}  // namespace epd
 
 #endif
 

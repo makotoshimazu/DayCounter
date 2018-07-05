@@ -14,16 +14,75 @@
 // limitations under the License.
 
 
-uint32_t time_start_ms;
+#include <epd2in13.h>
+#include <epdpaint.h>
+
+namespace {
+
+struct Color {
+  static const int kBlack = 0;
+  static const int kWhite = 1;
+};
+
+// Image buffer to manipulate a part of display.
+// Size: 1024 bytes * 8 bits = 8192 pixels
+static uint8_t s_image[1024];
+static epd::Paint s_paint(s_image, 0, 0);
+static epd::Epd s_epd;
+
+static uint32_t s_time_start_ms;
+
+class ScopedTimer {
+ public:
+  ScopedTimer(const char* tag) : start_us_(micros()), tag_(tag) {}
+  ~ScopedTimer() {
+    Serial.print(tag_);
+    Serial.print(": ");
+    Serial.print(micros() - start_us_);
+    Serial.println(" us");
+  }
+
+ private:
+  const char* tag_;
+  uint32_t start_us_;
+};
+
+}  // namespace
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Hello!");
-  time_start_ms = millis();
+
+  {
+    ScopedTimer("EPD::Init()");
+    if (s_epd.Init(epd::lut_full_update) != 0) {
+      Serial.println("EPD::Init() failed");
+      return;
+    }
+  }
+
+  {
+    ScopedTimer("EPD::ClearFrameMemory");
+    s_epd.ClearFrameMemory(0xFF);
+  }
+
+  {
+    ScopedTimer("Draw Hello World!");
+    s_paint.SetRotate(ROTATE_90);
+    s_paint.SetWidth(32);
+    s_paint.SetHeight(248);
+    s_paint.Clear(Color::kBlack);
+
+    s_paint.DrawStringAt(15, 8, "Happy Ten=shoku!", &epd::Font20, Color::kWhite);
+    s_epd.SetFrameMemory(s_paint.GetImage(), 45, 1, s_paint.GetWidth(), s_paint.GetHeight());
+    s_epd.DisplayFrame();
+  }
+
+  s_time_start_ms = millis();
 }
 
 void loop() {
-  uint32_t elapsed_s = (millis() - time_start_ms) / 1000;
-  Serial.println(elapsed_s);
-  delay(500);
+  /* uint32_t elapsed_s = (millis() - s_time_start_ms) / 1000; */
+  /* Serial.println(elapsed_s); */
+  /* delay(500); */
 }

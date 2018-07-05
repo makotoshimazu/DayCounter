@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include "epd2in13.h"
 
+namespace epd {
+
 Epd::~Epd() {
 };
 
@@ -277,6 +279,7 @@ const unsigned char lut_partial_update[] =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+}  // namespace epd
 
 /* END OF FILE */
 

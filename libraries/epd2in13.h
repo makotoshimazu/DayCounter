@@ -58,6 +58,8 @@
 #define SET_RAM_Y_ADDRESS_COUNTER                   0x4F
 #define TERMINATE_FRAME_READ_WRITE                  0xFF
 
+namespace epd {
+
 extern const unsigned char lut_full_update[];
 extern const unsigned char lut_partial_update[];
 
@@ -96,6 +98,8 @@ private:
     void SetMemoryArea(int x_start, int y_start, int x_end, int y_end);
     void SetMemoryPointer(int x, int y);
 };
+
+}  // namespace epd
 
 #endif /* EPD2IN13_H */
 

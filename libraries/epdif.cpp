@@ -28,6 +28,8 @@
 #include "epdif.h"
 #include <SPI.h>
 
+namespace epd {
+
 EpdIf::EpdIf() {
 };
 
@@ -62,3 +64,4 @@ int EpdIf::IfInit(void) {
     return 0;
 }
 
+}  // namespace epd

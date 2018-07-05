@@ -27,6 +27,8 @@
 #include <avr/pgmspace.h>
 #include "epdpaint.h"
 
+namespace epd {
+
 Paint::Paint(unsigned char* image, int width, int height) {
     this->rotate = ROTATE_0;
     this->image = image;
@@ -316,27 +318,6 @@ void Paint::DrawFilledCircle(int x, int y, int radius, int colored) {
     } while(x_pos <= 0);
 }
 
+}  // namespace epd
+
 /* END OF FILE */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
