@@ -15,7 +15,8 @@ Count days since a reset button is long pressed.
 2. Open the sketch from Arduino
 3. Select `EPD` from `Sketch` > `Include library` in the menu
 4. Select `DayCounterLib` from `Sketch` > `Include library` in the menu
-5. Select an appropriate board from `Tools` > `Board`
-6. Write!
+5. Select `RTC` from `Sketch` > `Include library` in the menu
+6. Select an appropriate board from `Tools` > `Board`
+7. Write!
 
 

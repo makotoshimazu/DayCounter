@@ -18,7 +18,9 @@
 
 #include <epd2in13.h>
 #include <epdpaint.h>
+#include <RTClib.h>
 #include <utils.h>
+#include <Wire.h>
 
 namespace {
 
@@ -35,11 +37,42 @@ static epd::Epd g_epd;
 
 static uint32_t g_time_start_ms;
 
+static RTC_DS1307 g_rtc;
+
+void drawDateTime(const DateTime& now) {
+  ScopedTimer("Draw");
+  g_paint.SetRotate(ROTATE_90);
+  g_paint.SetWidth(32);
+  g_paint.SetHeight(128);
+  g_paint.Clear(Color::kWhite);
+
+  char string[6] = {
+    now.hour() / 10 + '0',
+    now.hour() % 10 + '0',
+    ':',
+    now.minute() / 10 + '0',
+    now.minute() % 10 + '0',
+    '\0'
+  };
+  g_paint.DrawStringAt(20, 0, string, &epd::Font24, Color::kBlack);
+  g_epd.SetFrameMemory(
+      g_paint.GetImage(), 0, 61, g_paint.GetWidth(), g_paint.GetHeight());
+  g_epd.DisplayFrame();
+}
+
 }  // namespace
+
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Hello!");
+  Wire.begin();
+
+  g_rtc.begin();
+  if (!g_rtc.isrunning()) {
+    Serial.println("RTC is not available.");
+    g_rtc.adjust(DateTime(__DATE__, __TIME__));
+  }
 
   {
     ScopedTimer("EPD::Init()");
@@ -61,16 +94,46 @@ void setup() {
     g_paint.SetHeight(248);
     g_paint.Clear(Color::kBlack);
 
-    g_paint.DrawStringAt(15, 8, "Happy Ten=shoku!", &epd::Font20, Color::kWhite);
-    g_epd.SetFrameMemory(g_paint.GetImage(), 45, 1, g_paint.GetWidth(), g_paint.GetHeight());
+    g_paint.DrawStringAt(
+        15, 8, "Happy Ten=shoku!", &epd::Font20, Color::kWhite);
+    g_epd.SetFrameMemory(
+        g_paint.GetImage(), 45, 1, g_paint.GetWidth(), g_paint.GetHeight());
     g_epd.DisplayFrame();
   }
 
-  g_time_start_ms = millis();
+  DateTime now = g_rtc.now();
+  Serial.print(now.year(), DEC);
+  Serial.print('/');
+  Serial.print(now.month(), DEC);
+  Serial.print('/');
+  Serial.print(now.day(), DEC);
+  Serial.print(' ');
+  Serial.print(now.hour(), DEC);
+  Serial.print(':');
+  Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  Serial.println();
+
+  drawDateTime(now);
 }
 
 void loop() {
-  /* uint32_t elapsed_s = (millis() - g_time_start_ms) / 1000; */
-  /* Serial.println(elapsed_s); */
-  /* delay(500); */
+  DateTime now = g_rtc.now();
+  Serial.print(now.year(), DEC);
+  Serial.print('/');
+  Serial.print(now.month(), DEC);
+  Serial.print('/');
+  Serial.print(now.day(), DEC);
+  Serial.print(' ');
+  Serial.print(now.hour(), DEC);
+  Serial.print(':');
+  Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  Serial.println();
+
+  if (now.second() == 0)
+    drawDateTime(now);
+  delay(1000);
 }
