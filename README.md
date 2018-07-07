@@ -9,8 +9,7 @@ Count days since a reset button is long pressed.
    ```
     $ git clone https://github.com/makotoshimazu/DayCounter.git
     $ cd DayCounter
-    $ ln -s $(pwd)/EPD ~/Arduino/libraries/EPD
-    $ ln -s $(pwd)/DayCounterLib ~/Arduino/libraries/DayCounterLib
+    $ ln -s $(pwd)/libraries/* ~/Arduino/libraries/
    ```
 
 2. Open the sketch from Arduino
