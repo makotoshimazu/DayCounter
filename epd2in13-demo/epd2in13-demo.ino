@@ -32,6 +32,8 @@
 #define COLORED     0
 #define UNCOLORED   1
 
+using namespace epd;
+
 /**
   * Due to RAM not enough in Arduino UNO, a frame buffer is not allowed.
   * In this case, a smaller image buffer is allocated and you have to 
@@ -39,59 +41,59 @@
   * 1 byte = 8 pixels, therefore you have to set 8*N pixels at a time.
   */
 unsigned char image[1024];
-Paint paint(image, 0, 0);
-Epd epd;
+Paint g_paint(image, 0, 0);
+Epd g_epd;
 unsigned long time_start_ms;
 unsigned long time_now_s;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  if (epd.Init(lut_full_update) != 0) {
+  if (g_epd.Init(epd::lut_full_update) != 0) {
       Serial.print("e-Paper init failed");
       return;
   }
 
-  epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
+  g_epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
   
-  paint.SetRotate(ROTATE_0);
-  paint.SetWidth(128);    // width should be the multiple of 8 
-  paint.SetHeight(24);
+  g_paint.SetRotate(ROTATE_0);
+  g_paint.SetWidth(128);    // width should be the multiple of 8 
+  g_paint.SetHeight(24);
 
   /* For simplicity, the arguments are explicit numerical coordinates */
-  paint.Clear(COLORED);
-  paint.DrawStringAt(30, 4, "Hello world!", &Font12, UNCOLORED);
-  epd.SetFrameMemory(paint.GetImage(), 0, 10, paint.GetWidth(), paint.GetHeight());
+  g_paint.Clear(COLORED);
+  g_paint.DrawStringAt(30, 4, "Hello world!", &Font12, UNCOLORED);
+  g_epd.SetFrameMemory(g_paint.GetImage(), 0, 10, g_paint.GetWidth(), g_paint.GetHeight());
 
-  paint.Clear(UNCOLORED);
-  paint.DrawStringAt(30, 4, "e-Paper Demo", &Font12, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 0, 30, paint.GetWidth(), paint.GetHeight());
+  g_paint.Clear(UNCOLORED);
+  g_paint.DrawStringAt(30, 4, "e-Paper Demo", &Font12, COLORED);
+  g_epd.SetFrameMemory(g_paint.GetImage(), 0, 30, g_paint.GetWidth(), g_paint.GetHeight());
 
-  paint.SetWidth(64);
-  paint.SetHeight(64);
+  g_paint.SetWidth(64);
+  g_paint.SetHeight(64);
   
-  paint.Clear(UNCOLORED);
-  paint.DrawRectangle(0, 0, 40, 50, COLORED);
-  paint.DrawLine(0, 0, 40, 50, COLORED);
-  paint.DrawLine(40, 0, 0, 50, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 16, 60, paint.GetWidth(), paint.GetHeight());
+  g_paint.Clear(UNCOLORED);
+  g_paint.DrawRectangle(0, 0, 40, 50, COLORED);
+  g_paint.DrawLine(0, 0, 40, 50, COLORED);
+  g_paint.DrawLine(40, 0, 0, 50, COLORED);
+  g_epd.SetFrameMemory(g_paint.GetImage(), 16, 60, g_paint.GetWidth(), g_paint.GetHeight());
 
-  paint.Clear(UNCOLORED);
-  paint.DrawCircle(32, 32, 30, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 72, 60, paint.GetWidth(), paint.GetHeight());
+  g_paint.Clear(UNCOLORED);
+  g_paint.DrawCircle(32, 32, 30, COLORED);
+  g_epd.SetFrameMemory(g_paint.GetImage(), 72, 60, g_paint.GetWidth(), g_paint.GetHeight());
 
-  paint.Clear(UNCOLORED);
-  paint.DrawFilledRectangle(0, 0, 40, 50, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 16, 130, paint.GetWidth(), paint.GetHeight());
+  g_paint.Clear(UNCOLORED);
+  g_paint.DrawFilledRectangle(0, 0, 40, 50, COLORED);
+  g_epd.SetFrameMemory(g_paint.GetImage(), 16, 130, g_paint.GetWidth(), g_paint.GetHeight());
 
-  paint.Clear(UNCOLORED);
-  paint.DrawFilledCircle(32, 32, 30, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 72, 130, paint.GetWidth(), paint.GetHeight());
-  epd.DisplayFrame();
+  g_paint.Clear(UNCOLORED);
+  g_paint.DrawFilledCircle(32, 32, 30, COLORED);
+  g_epd.SetFrameMemory(g_paint.GetImage(), 72, 130, g_paint.GetWidth(), g_paint.GetHeight());
+  g_epd.DisplayFrame();
 
   delay(2000);
 
-  if (epd.Init(lut_partial_update) != 0) {
+  if (g_epd.Init(lut_partial_update) != 0) {
       Serial.print("e-Paper init failed");
       return;
   }
@@ -102,10 +104,10 @@ void setup() {
    *  i.e. the next action of SetFrameMemory will set the other memory area
    *  therefore you have to set the frame memory and refresh the display twice.
    */
-  epd.SetFrameMemory(IMAGE_DATA);
-  epd.DisplayFrame();
-  epd.SetFrameMemory(IMAGE_DATA);
-  epd.DisplayFrame();
+  g_epd.SetFrameMemory(IMAGE_DATA);
+  g_epd.DisplayFrame();
+  g_epd.SetFrameMemory(IMAGE_DATA);
+  g_epd.DisplayFrame();
 
   time_start_ms = millis();
 }
@@ -119,14 +121,14 @@ void loop() {
   time_string[3] = time_now_s % 60 / 10 + '0';
   time_string[4] = time_now_s % 60 % 10 + '0';
 
-  paint.SetWidth(32);
-  paint.SetHeight(96);
-  paint.SetRotate(ROTATE_90);
+  g_paint.SetWidth(32);
+  g_paint.SetHeight(96);
+  g_paint.SetRotate(ROTATE_90);
 
-  paint.Clear(UNCOLORED);
-  paint.DrawStringAt(0, 4, time_string, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 80, 72, paint.GetWidth(), paint.GetHeight());
-  epd.DisplayFrame();
+  g_paint.Clear(UNCOLORED);
+  g_paint.DrawStringAt(0, 4, time_string, &Font24, COLORED);
+  g_epd.SetFrameMemory(g_paint.GetImage(), 80, 72, g_paint.GetWidth(), g_paint.GetHeight());
+  g_epd.DisplayFrame();
 
   delay(500);
 }
