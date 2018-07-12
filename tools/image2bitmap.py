@@ -34,20 +34,15 @@ count = 0
 for x in range(srcImageWidth): # 0~srcImageWidth-1
     for y in range(srcImageHeight): # 0~srcImageHeight-1
         data = (data << 1)
+        if (img[srcImageHeight - (y + 1), x, 2] > 0):
+            data += 0
+        else:
+            data += 1
 
         if (y == srcImageHeight - 1):
-            if (img[srcImageHeight - (y + 1), x, 2] > 0):
-                data += 0
-            else:
-                data += 1
             data = (data << (dstImageWidth - srcImageHeight)) | (0xff >> (8 - (dstImageWidth - srcImageHeight)))
-            print((0xff >> (8 - (dstImageWidth - srcImageHeight))))
             count = 8
-        else:
-            if (img[srcImageHeight - (y + 1), x, 2] > 0):
-                data += 0
-            else:
-                data += 1
+
         count += 1
         if count >= 8:
             f.write(hex((data & 0xff)) + ',')
