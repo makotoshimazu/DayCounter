@@ -77,7 +77,7 @@ class DateTime {
   CRC::Type crc_;
 };
 
-// Size: 6 bytes
+// Size: 4 bytes
 class TimeDelta {
  public:
   TimeDelta(int32_t sec) : sec_(sec) {}
