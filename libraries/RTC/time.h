@@ -79,14 +79,12 @@ class DateTime {
 
 // Size: 6 bytes
 class TimeDelta {
-public:
+ public:
   TimeDelta(int32_t sec) : sec_(sec) {}
 
   int32_t seconds() const { return sec_; }
-  int16_t days() const  { return sec_ / (24 * 3600); }
+  int16_t days() const { return sec_ / (24L * 3600); }
 
-  TimeDelta& operator-();
-
-private:
+ private:
   int32_t sec_;
 };

@@ -126,7 +126,7 @@ bool DateTime::operator==(const DateTime& other) const {
 }
 
 bool DateTime::operator!=(const DateTime& other) const {
-  return !(*this == other)
+  return !(*this == other);
 }
 
 DateTime DateTime::operator+(const TimeDelta& delta) const {
@@ -138,7 +138,7 @@ DateTime DateTime::operator-(const TimeDelta& delta) const {
 }
 
 TimeDelta DateTime::operator-(const DateTime& other) const {
-  return TimeDelta(internalTime() - other.internalTime());
+  return TimeDelta(static_cast<int32_t>(internalTime()) - other.internalTime());
 }
 
 void DateTime::setFromInternalTime(uint32_t internal_time) {
@@ -172,9 +172,3 @@ CRC::Type DateTime::calculateParity() {
   crc.update(static_cast<void*>(this), sizeof(DateTime) - sizeof(CRC::Type));
   return crc.value();
 }
-
-TimeDelta& TimeDelta::operator-() {
-  sec_ = -sec_;
-  return *this;
-}
-

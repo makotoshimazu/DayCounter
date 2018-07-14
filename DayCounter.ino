@@ -18,11 +18,16 @@
 
 #include <epd2in13.h>
 #include <epdpaint.h>
+#include <persistent_data.h>
 #include <RTClib.h>
 #include <utils.h>
 #include <Wire.h>
 
 namespace {
+
+const DateTime kInitialTime(
+    2017 /* year */, 9 /* month */, 1 /* day */,
+    0 /* hour */, 0 /* minute */, 0 /* second */);
 
 struct Color {
   static const int kBlack = 0;
@@ -40,7 +45,7 @@ static DateTime g_start_time;
 static RTC_DS1307 g_rtc;
 
 void drawDateTime(const DateTime& now) {
-  ScopedTimer("Draw");
+  ScopedTimer s("Draw");
   g_paint.SetRotate(ROTATE_90);
   g_paint.SetWidth(32);
   g_paint.SetHeight(128);
@@ -60,14 +65,23 @@ void drawDateTime(const DateTime& now) {
   g_epd.DisplayFrame();
 }
 
+void printDateTime(const DateTime& dt) {
+  char buf[20];
+  sprintf(buf, "%4d/%02d/%02d ", dt.year(), dt.month(), dt.day());
+  Serial.print(buf);
+  sprintf(buf, "%02d:%02d:%02d", dt.hour(),dt.minute(), dt.second());
+  Serial.print(buf);
+}
+
 }  // namespace
 
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Hello!");
-  Wire.begin();
+  ScopedTimer s("setup");
 
+  Wire.begin();
   g_rtc.begin();
   if (!g_rtc.is_running()) {
     Serial.println("RTC is not available.");
@@ -75,7 +89,7 @@ void setup() {
   }
 
   {
-    ScopedTimer("EPD::Init()");
+    ScopedTimer s("EPD::Init()");
     if (g_epd.Init(epd::lut_full_update) != 0) {
       Serial.println("EPD::Init() failed");
       return;
@@ -83,12 +97,12 @@ void setup() {
   }
 
   {
-    ScopedTimer("EPD::ClearFrameMemory");
+    ScopedTimer s("EPD::ClearFrameMemory");
     g_epd.ClearFrameMemory(0xFF);
   }
 
   {
-    ScopedTimer("Draw Hello World!");
+    ScopedTimer s("Draw Hello World!");
     g_paint.SetRotate(ROTATE_90);
     g_paint.SetWidth(32);
     g_paint.SetHeight(248);
@@ -102,20 +116,33 @@ void setup() {
   }
 
   DateTime now = g_rtc.now();
-  Serial.print(now.year(), DEC);
-  Serial.print('/');
-  Serial.print(now.month(), DEC);
-  Serial.print('/');
-  Serial.print(now.day(), DEC);
-  Serial.print(' ');
-  Serial.print(now.hour(), DEC);
-  Serial.print(':');
-  Serial.print(now.minute(), DEC);
-  Serial.print(':');
-  Serial.print(now.second(), DEC);
-  Serial.println();
+  bool success;
+  {
+    ScopedTimer s("Get Time");
+    success = PersistentData::GetStartTime(&g_start_time);
+  }
 
-  g_start_time = now;
+  if (!success) {
+    // Update the stored time.
+    {
+      ScopedTimer s("Put Time: initial time");
+      PersistentData::PutStartTime(kInitialTime);
+    }
+    {
+      ScopedTimer s("Get Time 2nd");
+      success = PersistentData::GetStartTime(&g_start_time);
+      if (!success) {
+        Serial.println(
+            "EEPROM seems broken (typical reason is too many updates)...");
+        Serial.println("We'll count since last power up.");
+        Serial.println();
+        g_start_time = now;
+      }
+    }
+  }
+  Serial.print("Start Time: ");
+  printDateTime(g_start_time);
+  Serial.println();
 
   drawDateTime(now);
 }
@@ -124,10 +151,17 @@ void loop() {
   DateTime now = g_rtc.now();
   TimeDelta diff = now - g_start_time;
 
-  char buf[40];
-  sprintf(buf, "[%4d/%02d/%02d %02d:%02d:%02d] Elapsed: %5d sec", now.year(), now.month(),
-          now.day(),now.hour(),now.minute(), now.second(), diff.seconds());
-  Serial.println(buf);
+  Serial.print('[');
+  printDateTime(now);
+  Serial.print(']');
+  Serial.print(" Elapsed: ");
+  char buf[20];
+  sprintf(buf, "%8ld", diff.seconds());
+  Serial.print(buf);
+  Serial.print(" sec, ");
+  Serial.print(diff.days());
+  Serial.print(" days");
+  Serial.println();
 
   if (now.second() == 0)
     drawDateTime(now);

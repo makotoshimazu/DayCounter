@@ -30,11 +30,26 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define USE_PROGMEM 1
+
+#if USE_PROGMEM
+#include <avr/pgmspace.h>
+#define CRC_ATTRIBUTE PROGMEM
+static inline crc_t read(const crc_t *addr) {
+  return pgm_read_word(addr);
+}  // namespace
+#else
+#define CRC_ATTRIBUTE
+static inline crc_t read(const crc_t *addr) {
+  return *addr;
+}  // namespace
+#endif
 
 /**
  * Static table used for the table_driven implementation.
  */
-static const crc_t crc_table[16] = {
+// Size: 2 * 16 = 32 bytes
+static const crc_t crc_table[16] CRC_ATTRIBUTE = {
     0x0000, 0xc0c1, 0xc181, 0x0140, 0xc301, 0x03c0, 0x0280, 0xc241,
     0xc601, 0x06c0, 0x0780, 0xc741, 0x0500, 0xc5c1, 0xc481, 0x0440
 };
@@ -48,10 +63,10 @@ crc_t crc_update(crc_t crc, const void *data, size_t data_len)
         unsigned char byte = crc ^ *d;
         // LSB
         unsigned int tbl_idx = byte & 0xf;
-        crc = (crc_table[tbl_idx] ^ (crc >> 4)) & 0xffff;
+        crc = (read(crc_table + tbl_idx) ^ (crc >> 4)) & 0xffff;
         // MSB
         tbl_idx = (byte >> 4) & 0xf;
-        crc = (crc_table[tbl_idx] ^ (crc >> 4)) & 0xffff;
+        crc = (read(crc_table + tbl_idx) ^ (crc >> 4)) & 0xffff;
         d++;
     }
     return crc & 0xffff;

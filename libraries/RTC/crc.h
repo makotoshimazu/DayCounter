@@ -84,7 +84,9 @@ crc_t crc_update(crc_t crc, const void *data, size_t data_len);
  */
 static inline crc_t crc_finalize(crc_t crc)
 {
-    return crc;
+    // XOR 0b10101010_10101010 to make sure all zero data doesn't produce zero
+    // CRC.
+    return crc ^ 0xaaaa;
 }
 
 
