@@ -46,14 +46,15 @@ const int kDummyIntForZeroRegister = 0;
 
 }  // namespace
 
-uint8_t RTC_DS1307::begin(void) {
-  return 1;
+bool RTC_DS1307::begin() {
+  return true;
 }
 
 
 #if (ARDUINO >= 100)
 
-uint8_t RTC_DS1307::isrunning(void) {
+// static
+bool RTC_DS1307::is_running() {
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire.write(kDummyIntForZeroRegister);
   Wire.endTransmission();
@@ -63,6 +64,7 @@ uint8_t RTC_DS1307::isrunning(void) {
   return !(ss>>7);
 }
 
+// static
 void RTC_DS1307::adjust(const DateTime& dt) {
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire.write(kDummyIntForZeroRegister);
@@ -77,6 +79,7 @@ void RTC_DS1307::adjust(const DateTime& dt) {
   Wire.endTransmission();
 }
 
+// static
 DateTime RTC_DS1307::now() {
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire.write(kDummyIntForZeroRegister);
@@ -91,12 +94,13 @@ DateTime RTC_DS1307::now() {
   uint8_t m = bcd2bin(Wire.read());
   uint16_t y = bcd2bin(Wire.read()) + 2000;
 
-  return DateTime (y, m, d, hh, mm, ss);
+  return DateTime(y, m, d, hh, mm, ss);
 }
 
 #else
 
-uint8_t RTC_DS1307::isrunning(void) {
+// static
+bool RTC_DS1307::is_running() {
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire.send(kDummyIntForZeroRegister);
   Wire.endTransmission();
@@ -106,6 +110,7 @@ uint8_t RTC_DS1307::isrunning(void) {
   return !(ss>>7);
 }
 
+// static
 void RTC_DS1307::adjust(const DateTime& dt) {
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire.send(kDummyIntForZeroRegister);
@@ -120,6 +125,7 @@ void RTC_DS1307::adjust(const DateTime& dt) {
   Wire.endTransmission();
 }
 
+// static
 DateTime RTC_DS1307::now() {
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire.send(kDummyIntForZeroRegister);
@@ -134,7 +140,7 @@ DateTime RTC_DS1307::now() {
   uint8_t m = bcd2bin(Wire.receive());
   uint16_t y = bcd2bin(Wire.receive()) + 2000;
 
-  return DateTime (y, m, d, hh, mm, ss);
+  return DateTime(y, m, d, hh, mm, ss);
 }
 
 #endif
@@ -143,14 +149,20 @@ DateTime RTC_DS1307::now() {
 ////////////////////////////////////////////////////////////////////////////////
 // RTC_Millis implementation
 
-long RTC_Millis::offset = 0;
+// static
+uint32_t RTC_Millis::s_offset = 0;
 
+// static
+void RTC_Millis::begin(const DateTime& dt) { adjust(dt); }
+
+// static
 void RTC_Millis::adjust(const DateTime& dt) {
-  offset = dt.unixtime() - millis() / 1000;
+  s_offset = dt.internalTime() - millis() / 1000;
 }
 
+// static
 DateTime RTC_Millis::now() {
-  return (uint32_t)(offset + millis() / 1000);
+  return DateTime(s_offset + millis() / 1000);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

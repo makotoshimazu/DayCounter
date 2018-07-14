@@ -23,29 +23,35 @@
 #include <stdint.h>
 
 // Simple general-purpose date/time class
+// Size: 6 bytes
 //
 // Note: this ignores time zones, DST changes, and leap seconds.
 // See also http://en.wikipedia.org/wiki/Leap_second.
 class DateTime {
  public:
-  DateTime(uint32_t t = 0);
+  DateTime(uint32_t internalTime = 0);
   DateTime(uint16_t year, uint8_t month, uint8_t day,
            uint8_t hour = 0, uint8_t min = 0, uint8_t sec = 0);
   DateTime(const char* date, const char* time);
-  uint16_t year() const { return 2000 + yOff; }
-  uint8_t month() const { return m; }
-  uint8_t day() const { return d; }
-  uint8_t hour() const { return hh; }
-  uint8_t minute() const { return mm; }
-  uint8_t second() const { return ss; }
+  uint16_t year() const { return 2000 + y_since_2000_; }
+  uint8_t month() const { return m_; }
+  uint8_t day() const { return d_; }
+  uint8_t hour() const { return hh_; }
+  uint8_t minute() const { return mm_; }
+  uint8_t second() const { return ss_; }
   uint8_t dayOfWeek() const;
 
   // 32-bit times as seconds since 1/1/2000
-  long secondstime() const;
+  uint32_t internalTime() const;
   // 32-bit times as seconds since 1/1/1970
-  uint32_t unixtime(void) const;
+  uint32_t unixTime() const;
 
  protected:
   // |yOff| is years since 2000 (e.g. 18 if it's in 2018).
-  uint8_t yOff, m, d, hh, mm, ss;
+  uint8_t y_since_2000_;
+  uint8_t m_;
+  uint8_t d_;
+  uint8_t hh_;
+  uint8_t mm_;
+  uint8_t ss_;
 };
