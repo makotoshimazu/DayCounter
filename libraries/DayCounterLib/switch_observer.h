@@ -22,19 +22,21 @@
 class SwitchObserver {
  public:
   enum class State : uint8_t { kOn, kLongOn, kOff, kLongOff };
-  using FuncType = void(*)(State);
+  using CallbackType = void(*)(State);
 
-  SwitchObserver(uint8_t pin, FuncType func) : pin_(pin), func_(func) {}
+  // |callback| will be invoked when |state_| is updated.
+  SwitchObserver(uint8_t pin, CallbackType callback)
+      : pin_(pin), callback_(callback) {}
 
   // Initialize the state of pin.
   void Init();
 
-  // Called by each 50ms. This may invoke |func_|.
+  // Called by each 50ms. This may invoke |callback_|.
   void UpdateStateBy50Ms();
 
  private:
   uint8_t pin_;
-  FuncType func_;
+  CallbackType callback_;
   State state_ = State::kLongOff;
   uint8_t count_ = 0;
 };

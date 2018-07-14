@@ -63,7 +63,7 @@ void SwitchObserver::UpdateStateBy50Ms() {
         count_++;
         if (count_ >= kLongPressCycles) {
           state_ = State::kLongOn;
-          func_(state_);
+          callback_(state_);
         }
         return;
       }
@@ -72,7 +72,7 @@ void SwitchObserver::UpdateStateBy50Ms() {
       if (!IsOn(val)) {
         state_ = State::kOff;
         count_ = 0;
-        func_(state_);
+        callback_(state_);
       }
       return;
     case State::kOff:
@@ -80,7 +80,7 @@ void SwitchObserver::UpdateStateBy50Ms() {
         count_++;
         if (count_ >= kLongPressCycles) {
           state_ = State::kLongOff;
-          func_(state_);
+          callback_(state_);
         }
         return;
       }
@@ -89,7 +89,7 @@ void SwitchObserver::UpdateStateBy50Ms() {
       if (IsOn(val)) {
         state_ = State::kOn;
         count_ = 0;
-        func_(state_);
+        callback_(state_);
       }
       return;
   }
