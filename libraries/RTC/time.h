@@ -50,7 +50,7 @@ class DateTime {
   // 32-bit times as seconds since 1/1/1970
   uint32_t unixTime() const;
 
-  // Returns true if |parity_| is correct.
+  // Returns true if |crc_| is correct.
   bool is_valid() const;
 
   bool operator==(const DateTime& other) const;
