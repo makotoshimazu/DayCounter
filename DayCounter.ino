@@ -20,6 +20,7 @@
 #include <epdpaint.h>
 #include <persistent_data.h>
 #include <RTClib.h>
+#include <switch_observer.h>
 #include <utils.h>
 #include <Wire.h>
 
@@ -29,6 +30,8 @@ const DateTime kInitialTime(
     2017 /* year */, 9 /* month */, 1 /* day */,
     0 /* hour */, 0 /* minute */, 0 /* second */);
 
+const DateTime kCompiledTime(__DATE__, __TIME__);
+
 struct Color {
   static const int kBlack = 0;
   static const int kWhite = 1;
@@ -36,15 +39,18 @@ struct Color {
 
 // Image buffer to manipulate a part of display.
 // Size: 1024 bytes * 8 bits = 8192 pixels
-static uint8_t g_image[1024];
-static epd::Paint g_paint(g_image, 0, 0);
-static epd::Epd g_epd;
+uint8_t g_image[1024];
+epd::Paint g_paint(g_image, 0, 0);
+epd::Epd g_epd;
 
-static DateTime g_start_time;
+DateTime g_start_time;
 
-static RTC_DS1307 g_rtc;
+RTC_DS1307 g_rtc;
 
-void drawDateTime(const DateTime& now) {
+void SwitchStateChanged(SwitchObserver::State state);
+SwitchObserver g_switch_observer(2 /* pin */, SwitchStateChanged);
+
+void DrawDateTime(const DateTime& now) {
   ScopedTimer s("Draw");
   g_paint.SetRotate(ROTATE_90);
   g_paint.SetWidth(32);
@@ -65,12 +71,58 @@ void drawDateTime(const DateTime& now) {
   g_epd.DisplayFrame();
 }
 
-void printDateTime(const DateTime& dt) {
+void PrintDateTime(const DateTime& dt) {
   char buf[20];
   sprintf(buf, "%4d/%02d/%02d ", dt.year(), dt.month(), dt.day());
   Serial.print(buf);
   sprintf(buf, "%02d:%02d:%02d", dt.hour(),dt.minute(), dt.second());
   Serial.print(buf);
+}
+
+void UpdateStartTime(const DateTime& dt) {
+  {
+    ScopedTimer s("Put Time");
+    PersistentData::PutStartTime(dt);
+  }
+  {
+    ScopedTimer s("Get Time");
+    bool success = PersistentData::GetStartTime(&g_start_time);
+    if (!success) {
+      Serial.println(
+          "EEPROM seems broken (typical reason is too many updates)...");
+      Serial.println("Counts days since this device is powered up.");
+      g_start_time = g_rtc.now();
+    }
+  }
+}
+
+void SwitchStateChanged(SwitchObserver::State state) {
+  using State = SwitchObserver::State;
+  static uint8_t s_repeat_short_press_count = 0;
+  switch(state) {
+    case State::kOn:
+      Serial.println("on");
+      s_repeat_short_press_count++;
+      break;
+    case State::kLongOn:
+      Serial.println("on long");
+      s_repeat_short_press_count = 0;
+      UpdateStartTime(g_rtc.now());
+      break;
+    case State::kOff:
+      Serial.println("off");
+      s_repeat_short_press_count++;
+      if (s_repeat_short_press_count >= 20) {
+        // Pressed the button 10 times shortly.
+        s_repeat_short_press_count = 0;
+        UpdateStartTime(kInitialTime);
+      }
+      break;
+    case State::kLongOff:
+      Serial.println("off long");
+      s_repeat_short_press_count = 0;
+      break;
+  }
 }
 
 }  // namespace
@@ -85,8 +137,9 @@ void setup() {
   g_rtc.begin();
   if (!g_rtc.is_running()) {
     Serial.println("RTC is not available.");
-    g_rtc.adjust(DateTime(__DATE__, __TIME__));
+    g_rtc.adjust(kCompiledTime);
   }
+  g_switch_observer.Init();
 
   {
     ScopedTimer s("EPD::Init()");
@@ -115,55 +168,58 @@ void setup() {
     g_epd.DisplayFrame();
   }
 
-  DateTime now = g_rtc.now();
   bool success;
   {
     ScopedTimer s("Get Time");
     success = PersistentData::GetStartTime(&g_start_time);
   }
-
   if (!success) {
-    // Update the stored time.
-    {
-      ScopedTimer s("Put Time: initial time");
-      PersistentData::PutStartTime(kInitialTime);
-    }
-    {
-      ScopedTimer s("Get Time 2nd");
-      success = PersistentData::GetStartTime(&g_start_time);
-      if (!success) {
-        Serial.println(
-            "EEPROM seems broken (typical reason is too many updates)...");
-        Serial.println("We'll count since last power up.");
-        Serial.println();
-        g_start_time = now;
-      }
-    }
+    // If start time is not written down to EEPROM yet, write |kInitialTime| as
+    // the initial value.
+    UpdateStartTime(kInitialTime);
   }
+
   Serial.print("Start Time: ");
-  printDateTime(g_start_time);
+  PrintDateTime(g_start_time);
   Serial.println();
 
-  drawDateTime(now);
+  DrawDateTime(g_rtc.now());
 }
 
 void loop() {
-  DateTime now = g_rtc.now();
-  TimeDelta diff = now - g_start_time;
+  // Time when the latest 50ms interval invoked.
+  static uint32_t s_last_interval_us = 0;
+  static uint8_t s_interval_count = 0;
 
-  Serial.print('[');
-  printDateTime(now);
-  Serial.print(']');
-  Serial.print(" Elapsed: ");
-  char buf[20];
-  sprintf(buf, "%8ld", diff.seconds());
-  Serial.print(buf);
-  Serial.print(" sec, ");
-  Serial.print(diff.days());
-  Serial.print(" days");
-  Serial.println();
+  uint32_t now_us = micros();
+  uint32_t diff_us = now_us - s_last_interval_us;
 
-  if (now.second() == 0)
-    drawDateTime(now);
-  delay(1000);
+  if (diff_us >= 50000) {
+    s_last_interval_us = now_us;
+    s_interval_count++;
+    g_switch_observer.UpdateStateBy50Ms();
+  }
+
+  // By each 1000ms
+  if (s_interval_count == 1000 / 50) {
+    s_interval_count = 0;
+
+    DateTime now = g_rtc.now();
+    TimeDelta diff = now - g_start_time;
+
+    Serial.print('[');
+    PrintDateTime(now);
+    Serial.print(']');
+    Serial.print(" Elapsed: ");
+    char buf[20];
+    sprintf(buf, "%8ld", diff.seconds());
+    Serial.print(buf);
+    Serial.print(" sec, ");
+    Serial.print(diff.days());
+    Serial.print(" days");
+    Serial.println();
+
+    if (now.second() == 0)
+      DrawDateTime(now);
+  }
 }
