@@ -47,7 +47,6 @@ class DateTime {
   uint32_t unixTime() const;
 
  protected:
-  // |yOff| is years since 2000 (e.g. 18 if it's in 2018).
   uint8_t y_since_2000_;
   uint8_t m_;
   uint8_t d_;
