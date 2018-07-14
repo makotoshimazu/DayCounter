@@ -69,7 +69,7 @@ void setup() {
   Wire.begin();
 
   g_rtc.begin();
-  if (!g_rtc.isrunning()) {
+  if (!g_rtc.is_running()) {
     Serial.println("RTC is not available.");
     g_rtc.adjust(DateTime(__DATE__, __TIME__));
   }
