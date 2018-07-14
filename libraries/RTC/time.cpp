@@ -70,6 +70,7 @@ DateTime::DateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour,
   hh_ = hour;
   mm_ = min;
   ss_ = sec;
+  crc_ = calculateParity();
 }
 
 // A convenient constructor for using "the compiler's time":
@@ -93,6 +94,7 @@ DateTime::DateTime(const char* date, const char* time) {
   hh_ = twoChars2num(time);
   mm_ = twoChars2num(time + 3);
   ss_ = twoChars2num(time + 6);
+  crc_ = calculateParity();
 }
 
 uint8_t DateTime::dayOfWeek() const {
@@ -109,13 +111,30 @@ uint32_t DateTime::unixTime() const {
   return internalTime() + kSecondsFrom1970To2000;
 }
 
-DateTime& DateTime::operator+(const TimeDelta& delta) {
-  setFromInternalTime(internalTime() + delta.seconds());
-  return *this;
+bool DateTime::is_valid() const {
+  return crc_ == calculateParity();
 }
-DateTime& DateTime::operator-(const TimeDelta& delta) {
-  setFromInternalTime(internalTime() - delta.seconds());
-  return *this;
+
+bool DateTime::operator==(const DateTime& other) const {
+  return y_since_2000_ == other.y_since_2000_ &&
+      m_ == other.m_ &&
+      d_ == other.d_ &&
+      hh_ == other.hh_ &&
+      mm_ == other.mm_ &&
+      ss_ == other.ss_ &&
+      crc_ == other.crc_;
+}
+
+bool DateTime::operator!=(const DateTime& other) const {
+  return !(*this == other)
+}
+
+DateTime DateTime::operator+(const TimeDelta& delta) const {
+  return DateTime(internalTime() + delta.seconds());
+}
+
+DateTime DateTime::operator-(const TimeDelta& delta) const {
+  return DateTime(internalTime() - delta.seconds());
 }
 
 TimeDelta DateTime::operator-(const DateTime& other) const {
@@ -145,6 +164,13 @@ void DateTime::setFromInternalTime(uint32_t internal_time) {
     days -= daysPerMonth;
   }
   d_= days + 1;
+  crc_ = calculateParity();
+}
+
+CRC::Type DateTime::calculateParity() {
+  CRC crc;
+  crc.update(static_cast<void*>(this), sizeof(DateTime) - sizeof(CRC::Type));
+  return crc.value();
 }
 
 TimeDelta& TimeDelta::operator-() {

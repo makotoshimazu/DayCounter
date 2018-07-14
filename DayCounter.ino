@@ -123,7 +123,6 @@ void setup() {
 void loop() {
   DateTime now = g_rtc.now();
   TimeDelta diff = now - g_start_time;
-  TimeDelta diff(0);
 
   char buf[40];
   sprintf(buf, "[%4d/%02d/%02d %02d:%02d:%02d] Elapsed: %5d sec", now.year(), now.month(),

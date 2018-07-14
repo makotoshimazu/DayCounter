@@ -22,10 +22,12 @@
 
 #include <stdint.h>
 
+#include "crc.h"
+
 class TimeDelta;
 
 // Simple general-purpose date/time class
-// Size: 6 bytes
+// Size: 8 bytes
 //
 // Note: this ignores time zones, DST changes, and leap seconds.
 // See also http://en.wikipedia.org/wiki/Leap_second.
@@ -48,13 +50,20 @@ class DateTime {
   // 32-bit times as seconds since 1/1/1970
   uint32_t unixTime() const;
 
-  DateTime& operator+(const TimeDelta& delta);
-  DateTime& operator-(const TimeDelta& delta);
+  // Returns true if |parity_| is correct.
+  bool is_valid() const;
+
+  bool operator==(const DateTime& other) const;
+  bool operator!=(const DateTime& other) const;
+
+  DateTime operator+(const TimeDelta& delta) const;
+  DateTime operator-(const TimeDelta& delta) const;
 
   TimeDelta operator-(const DateTime& other) const;
 
  protected:
   void setFromInternalTime(uint32_t internal_time);
+  CRC::Type calculateParity();
 
   uint8_t y_since_2000_;
   uint8_t m_;
@@ -62,6 +71,10 @@ class DateTime {
   uint8_t hh_;
   uint8_t mm_;
   uint8_t ss_;
+
+  // This needs to be the last member since calculateParity() omits the last
+  // sizeof(CRC::Type) bytes.
+  CRC::Type crc_;
 };
 
 // Size: 6 bytes
