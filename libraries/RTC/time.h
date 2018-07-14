@@ -22,14 +22,18 @@
 
 #include <stdint.h>
 
+#include "crc.h"
+
+class TimeDelta;
+
 // Simple general-purpose date/time class
-// Size: 6 bytes
+// Size: 8 bytes
 //
 // Note: this ignores time zones, DST changes, and leap seconds.
 // See also http://en.wikipedia.org/wiki/Leap_second.
 class DateTime {
  public:
-  DateTime(uint32_t internalTime = 0);
+  DateTime(uint32_t internal_ime = 0);
   DateTime(uint16_t year, uint8_t month, uint8_t day,
            uint8_t hour = 0, uint8_t min = 0, uint8_t sec = 0);
   DateTime(const char* date, const char* time);
@@ -46,11 +50,41 @@ class DateTime {
   // 32-bit times as seconds since 1/1/1970
   uint32_t unixTime() const;
 
+  // Returns true if |crc_| is correct.
+  bool is_valid() const;
+
+  bool operator==(const DateTime& other) const;
+  bool operator!=(const DateTime& other) const;
+
+  DateTime operator+(const TimeDelta& delta) const;
+  DateTime operator-(const TimeDelta& delta) const;
+
+  TimeDelta operator-(const DateTime& other) const;
+
  protected:
+  void setFromInternalTime(uint32_t internal_time);
+  CRC::Type calculateParity();
+
   uint8_t y_since_2000_;
   uint8_t m_;
   uint8_t d_;
   uint8_t hh_;
   uint8_t mm_;
   uint8_t ss_;
+
+  // This needs to be the last member since calculateParity() omits the last
+  // sizeof(CRC::Type) bytes.
+  CRC::Type crc_;
+};
+
+// Size: 4 bytes
+class TimeDelta {
+ public:
+  TimeDelta(int32_t sec) : sec_(sec) {}
+
+  int32_t seconds() const { return sec_; }
+  int16_t days() const { return sec_ / (24L * 3600); }
+
+ private:
+  int32_t sec_;
 };
