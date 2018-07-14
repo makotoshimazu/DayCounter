@@ -22,6 +22,8 @@
 
 #include <stdint.h>
 
+class TimeDelta;
+
 // Simple general-purpose date/time class
 // Size: 6 bytes
 //
@@ -29,7 +31,7 @@
 // See also http://en.wikipedia.org/wiki/Leap_second.
 class DateTime {
  public:
-  DateTime(uint32_t internalTime = 0);
+  DateTime(uint32_t internal_ime = 0);
   DateTime(uint16_t year, uint8_t month, uint8_t day,
            uint8_t hour = 0, uint8_t min = 0, uint8_t sec = 0);
   DateTime(const char* date, const char* time);
@@ -46,11 +48,32 @@ class DateTime {
   // 32-bit times as seconds since 1/1/1970
   uint32_t unixTime() const;
 
+  DateTime& operator+(const TimeDelta& delta);
+  DateTime& operator-(const TimeDelta& delta);
+
+  TimeDelta operator-(const DateTime& other) const;
+
  protected:
+  void setFromInternalTime(uint32_t internal_time);
+
   uint8_t y_since_2000_;
   uint8_t m_;
   uint8_t d_;
   uint8_t hh_;
   uint8_t mm_;
   uint8_t ss_;
+};
+
+// Size: 6 bytes
+class TimeDelta {
+public:
+  TimeDelta(int32_t sec) : sec_(sec) {}
+
+  int32_t seconds() const { return sec_; }
+  int16_t days() const  { return sec_ / (24 * 3600); }
+
+  TimeDelta& operator-();
+
+private:
+  int32_t sec_;
 };

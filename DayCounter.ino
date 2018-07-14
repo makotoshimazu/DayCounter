@@ -35,7 +35,7 @@ static uint8_t g_image[1024];
 static epd::Paint g_paint(g_image, 0, 0);
 static epd::Epd g_epd;
 
-static uint32_t g_time_start_ms;
+static DateTime g_start_time;
 
 static RTC_DS1307 g_rtc;
 
@@ -115,23 +115,20 @@ void setup() {
   Serial.print(now.second(), DEC);
   Serial.println();
 
+  g_start_time = now;
+
   drawDateTime(now);
 }
 
 void loop() {
   DateTime now = g_rtc.now();
-  Serial.print(now.year(), DEC);
-  Serial.print('/');
-  Serial.print(now.month(), DEC);
-  Serial.print('/');
-  Serial.print(now.day(), DEC);
-  Serial.print(' ');
-  Serial.print(now.hour(), DEC);
-  Serial.print(':');
-  Serial.print(now.minute(), DEC);
-  Serial.print(':');
-  Serial.print(now.second(), DEC);
-  Serial.println();
+  TimeDelta diff = now - g_start_time;
+  TimeDelta diff(0);
+
+  char buf[40];
+  sprintf(buf, "[%4d/%02d/%02d %02d:%02d:%02d] Elapsed: %5d sec", now.year(), now.month(),
+          now.day(),now.hour(),now.minute(), now.second(), diff.seconds());
+  Serial.println(buf);
 
   if (now.second() == 0)
     drawDateTime(now);

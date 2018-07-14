@@ -56,29 +56,8 @@ uint8_t twoChars2num(const char* p) {
 
 }  // namespace
 
-DateTime::DateTime(uint32_t internalTime) {
-  ss_ = internalTime % 60;
-  internalTime /= 60;
-  mm_ = internalTime % 60;
-  internalTime /= 60;
-  hh_ = internalTime % 24;
-  uint16_t days = internalTime / 24;
-  uint8_t leap;
-  for (y_since_2000_ = 0; ; ++y_since_2000_) {
-    leap = y_since_2000_ % 4 == 0;
-    if (days < 365 + leap)
-      break;
-    days -= 365 + leap;
-  }
-  for (m_ = 1; ; ++m_) {
-    uint8_t daysPerMonth = pgm_read_byte(kDaysInMonth_P + m_ - 1);
-    if (leap && m_ == 2)
-      ++daysPerMonth;
-    if (days < daysPerMonth)
-      break;
-    days -= daysPerMonth;
-  }
-  d_= days + 1;
+DateTime::DateTime(uint32_t internal_time) {
+  setFromInternalTime(internal_time);
 }
 
 DateTime::DateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour,
@@ -129,3 +108,47 @@ uint32_t DateTime::internalTime() const {
 uint32_t DateTime::unixTime() const {
   return internalTime() + kSecondsFrom1970To2000;
 }
+
+DateTime& DateTime::operator+(const TimeDelta& delta) {
+  setFromInternalTime(internalTime() + delta.seconds());
+  return *this;
+}
+DateTime& DateTime::operator-(const TimeDelta& delta) {
+  setFromInternalTime(internalTime() - delta.seconds());
+  return *this;
+}
+
+TimeDelta DateTime::operator-(const DateTime& other) const {
+  return TimeDelta(internalTime() - other.internalTime());
+}
+
+void DateTime::setFromInternalTime(uint32_t internal_time) {
+  ss_ = internal_time % 60;
+  internal_time /= 60;
+  mm_ = internal_time % 60;
+  internal_time /= 60;
+  hh_ = internal_time % 24;
+  uint16_t days = internal_time / 24;
+  uint8_t leap;
+  for (y_since_2000_ = 0; ; ++y_since_2000_) {
+    leap = y_since_2000_ % 4 == 0;
+    if (days < 365 + leap)
+      break;
+    days -= 365 + leap;
+  }
+  for (m_ = 1; ; ++m_) {
+    uint8_t daysPerMonth = pgm_read_byte(kDaysInMonth_P + m_ - 1);
+    if (leap && m_ == 2)
+      ++daysPerMonth;
+    if (days < daysPerMonth)
+      break;
+    days -= daysPerMonth;
+  }
+  d_= days + 1;
+}
+
+TimeDelta& TimeDelta::operator-() {
+  sec_ = -sec_;
+  return *this;
+}
+
