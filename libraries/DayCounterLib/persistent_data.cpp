@@ -27,6 +27,7 @@ namespace {
 //
 // Use 0 for prod, 300 for debug.
 const int kStartTimeAddr = 300;
+const int kCompiledTimeAddr = kStartTimeAddr + sizeof(DateTime);
 
 }  // namespace
 
@@ -43,4 +44,21 @@ bool PersistentData::GetStartTime(DateTime* start_time) {
 // static
 bool PersistentData::PutStartTime(const DateTime& start_time) {
   EEPROM.put(kStartTimeAddr, start_time);
+  return true;
+}
+
+// static
+bool PersistentData::UpdateCompiledTime(const DateTime& compiled_time) {
+  DateTime dt;
+  EEPROM.get(kCompiledTimeAddr, dt);
+  if (!dt.is_valid() || dt != compiled_time) {
+    EEPROM.put(kCompiledTimeAddr, compiled_time);
+    EEPROM.get(kCompiledTimeAddr, dt);
+    if (!dt.is_valid() || dt != compiled_time) {
+      // EEPROM seems to be broken.
+      return false;
+    }
+    return true;
+  }
+  return false;
 }

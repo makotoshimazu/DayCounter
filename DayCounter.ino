@@ -135,10 +135,16 @@ void setup() {
 
   Wire.begin();
   g_rtc.begin();
-  if (!g_rtc.is_running()) {
-    Serial.println("RTC is not available.");
+  bool is_compiled_time_updated =
+      PersistentData::UpdateCompiledTime(kCompiledTime);
+  if (!g_rtc.is_running() || is_compiled_time_updated) {
+    Serial.print("RTC? ");
+    Serial.print(!g_rtc.is_running());
+    Serial.print(", CompiledTime? ");
+    Serial.println(is_compiled_time_updated);
     g_rtc.adjust(kCompiledTime);
   }
+
   g_switch_observer.Init();
 
   {
