@@ -22,8 +22,12 @@ class DateTime;
 class PersistentData {
  public:
   // StartTime: date from which the counter starts.
-  //
   // Returns false if stored data was invalid.
   static bool GetStartTime(DateTime* start_time);
   static bool PutStartTime(const DateTime& start_time);
+
+  // CompiledTime: date when the program was compiled.
+  // Returns true if the compiled time is updated and stored.
+  static bool UpdateCompiledTime(const DateTime& compiled_time);
+
 };
