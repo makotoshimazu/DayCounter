@@ -16,6 +16,7 @@
 // limitations under the License.
 
 
+#include <days_paint.h>
 #include <epd2in13.h>
 #include <epdpaint.h>
 #include <persistent_data.h>
@@ -23,8 +24,6 @@
 #include <switch_observer.h>
 #include <utils.h>
 #include <Wire.h>
-#include <avr/pgmspace.h>
-#include <days_paint.h  >
 
 namespace {
 
@@ -46,32 +45,12 @@ epd::Paint g_paint(g_image, 0, 0);
 epd::Epd g_epd;
 
 DateTime g_start_time;
+uint16_t g_last_diff_days = 0;
 
 RTC_DS1307 g_rtc;
 
 void SwitchStateChanged(SwitchObserver::State state);
 SwitchObserver g_switch_observer(2 /* pin */, SwitchStateChanged);
-
-void DrawDateTime(const DateTime& now) {
-  ScopedTimer s("Draw");
-  g_paint.SetRotate(ROTATE_90);
-  g_paint.SetWidth(32);
-  g_paint.SetHeight(128);
-  g_paint.Clear(Color::kWhite);
-
-  char string[6] = {
-    now.hour() / 10 + '0',
-    now.hour() % 10 + '0',
-    ':',
-    now.minute() / 10 + '0',
-    now.minute() % 10 + '0',
-    '\0'
-  };
-  g_paint.DrawStringAt(20, 0, string, &epd::Font24, Color::kBlack);
-  g_epd.SetFrameMemory(
-      g_paint.GetImage(), 0, 61, g_paint.GetWidth(), g_paint.GetHeight());
-  g_epd.DisplayFrame();
-}
 
 void PrintDateTime(const DateTime& dt) {
   char buf[20];
@@ -125,9 +104,12 @@ void SwitchStateChanged(SwitchObserver::State state) {
       s_repeat_short_press_count = 0;
       break;
   }
+}
 
-void drawDaysString() {
-  DaysPaint::PaintDaysToFrameMemory(1000 /* number */, &g_epd);
+void DrawDaysString(int16_t days) {
+  ScopedTimer s(__func__);
+  g_epd.ClearFrameMemory(0xFF);
+  DaysPaint::PaintDaysToFrameMemory(days, &g_epd);
   g_epd.DisplayFrame();
 }
 
@@ -138,13 +120,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Hello!");
   ScopedTimer s("setup");
-  for (int i = 0; i < 10; i++) {
-    Serial.print(IMAGE_DATA[i]);
-    Serial.print(',');
 
-
-  }
-      Serial.print('\r\n');
   Wire.begin();
   g_rtc.begin();
   bool is_compiled_time_updated =
@@ -167,25 +143,6 @@ void setup() {
     }
   }
 
-  {
-    ScopedTimer s("EPD::ClearFrameMemory");
-    g_epd.ClearFrameMemory(0xFF);
-  }
-
-  {
-    ScopedTimer s("Draw Hello World!");
-    g_paint.SetRotate(ROTATE_90);
-    g_paint.SetWidth(32);
-    g_paint.SetHeight(248);
-    g_paint.Clear(Color::kBlack);
-
-    g_paint.DrawStringAt(
-        15, 8, "Happy Ten=shoku!", &epd::Font20, Color::kWhite);
-    g_epd.SetFrameMemory(
-        g_paint.GetImage(), 45, 1, g_paint.GetWidth(), g_paint.GetHeight());
-    g_epd.DisplayFrame();
-  }
-
   bool success;
   {
     ScopedTimer s("Get Time");
@@ -201,8 +158,9 @@ void setup() {
   PrintDateTime(g_start_time);
   Serial.println();
 
-  DrawDateTime(g_rtc.now());
-  drawDaysString();
+  TimeDelta diff = g_rtc.now() - g_start_time;
+  g_last_diff_days = diff.days();
+  DrawDaysString(diff.days());
 }
 
 void loop() {
@@ -238,7 +196,9 @@ void loop() {
     Serial.print(" days");
     Serial.println();
 
-    if (now.second() == 0)
-      DrawDateTime(now);
+    if (diff.days() != g_last_diff_days) {
+      g_last_diff_days = diff.days();
+      DrawDaysString(diff.days());
+    }
   }
 }

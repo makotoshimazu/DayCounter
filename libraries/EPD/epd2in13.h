@@ -81,7 +81,7 @@ public:
         int y,
         int image_width,
         int image_height,
-        bool from_progmem=false
+        bool from_progmem = false
     );
     void SetFrameMemory(const unsigned char* image_buffer);
     void ClearFrameMemory(unsigned char color);
