@@ -200,8 +200,8 @@ void loop() {
     // for debug
     static uint8_t rollover = 0;
     DrawDaysString(diff.days() + rollover++ * 1000);
-    if (rollover == 20)
-      rollover = 0;
+    // if (rollover == 20)
+    //   rollover = 0;
 
     /* if (diff.days() != g_last_diff_days) { */
     /*   g_last_diff_days = diff.days(); */

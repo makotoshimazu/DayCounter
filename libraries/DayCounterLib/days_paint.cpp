@@ -176,8 +176,8 @@ void DaysPaint::PaintDaysToFrameMemory(int days, epd::Epd *display) {
 
 void DaysPaint::PaintRolloverMarkerToFrameMemory(uint8_t rollover,
                                                  epd::Epd *display) {
-  if (rollover > 2)
-    return;
+  if (rollover > 20)
+    rollover = 20;
 
   display->SetFrameMemory(
       kRolloverImages_P[rollover],
