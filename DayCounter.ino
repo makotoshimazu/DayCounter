@@ -110,6 +110,7 @@ void DrawDaysString(int16_t days) {
   ScopedTimer s(__func__);
   g_epd.ClearFrameMemory(0xFF);
   DaysPaint::PaintDaysToFrameMemory(days, &g_epd);
+  DaysPaint::PaintRolloverMarkerToFrameMemory(1, &g_epd);
   g_epd.DisplayFrame();
 }
 

@@ -18,7 +18,7 @@
 #include "days_paint.h"
 
 #include "font_rancher.h"
-
+#include "rollover_marker.h"
 
 using namespace font_rancher;
 
@@ -172,5 +172,18 @@ void DaysPaint::PaintDaysToFrameMemory(int days, epd::Epd *display) {
       kImageDataDaysWidth,
       kImageDataDaysHeight,
       true /* from_progmem */);
+}
 
+void DaysPaint::PaintRolloverMarkerToFrameMemory(uint8_t rollover,
+                                                 epd::Epd *display) {
+  if (rollover > 20)
+    return;
+
+  display->SetFrameMemory(
+      kRolloverImages_P[rollover],
+      kRolloverMarkerWidthOffset,
+      kRolloverMarkerHeightOffset,
+      kRolloverMarkerWidth,
+      kRolloverMarkerHeight,
+      true /* from_progmem */);
 }

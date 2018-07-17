@@ -23,4 +23,9 @@
 class DaysPaint {
  public:
   static void PaintDaysToFrameMemory(int days, epd::Epd *display);
+
+  // If |rollover| is zero, rollover will be deleted.
+  // Valid |rollover| range is zero to 20.
+  static void PaintRolloverMarkerToFrameMemory(uint8_t rollover,
+                                               epd::Epd* display);
 };
