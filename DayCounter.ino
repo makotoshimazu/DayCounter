@@ -1,7 +1,7 @@
 //
 // DayCounter.ino
 //
-// Copyright 2018 Makoto Shimazu
+// Copyright 2018 Makoto Shimazu, Murata Tetsuya
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -106,10 +106,12 @@ void SwitchStateChanged(SwitchObserver::State state) {
   }
 }
 
-void DrawDaysString(int16_t days) {
+void DrawDaysString(uint16_t days) {
   ScopedTimer s(__func__);
   g_epd.ClearFrameMemory(0xFF);
   DaysPaint::PaintDaysToFrameMemory(days, &g_epd);
+  if (days % 1000 != 0)
+    DaysPaint::PaintRolloverMarkerToFrameMemory(days / 1000, &g_epd);
   g_epd.DisplayFrame();
 }
 
