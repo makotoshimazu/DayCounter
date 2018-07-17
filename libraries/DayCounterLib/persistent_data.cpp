@@ -26,7 +26,7 @@ namespace {
 // StartTime: DateTime
 //
 // Use 0 for prod, 300 for debug.
-const int kStartTimeAddr = 300;
+const int kStartTimeAddr = 0;
 const int kCompiledTimeAddr = kStartTimeAddr + sizeof(DateTime);
 
 }  // namespace
