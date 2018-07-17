@@ -128,7 +128,8 @@ void Epd::SetFrameMemory(
     int x,
     int y,
     int image_width,
-    int image_height
+    int image_height,
+    bool from_progmem
 ) {
     int x_end;
     int y_end;
@@ -159,7 +160,13 @@ void Epd::SetFrameMemory(
         SetMemoryPointer(x, j);
         SendCommand(WRITE_RAM);
         for (int i = x / 8; i <= x_end / 8; i++) {
-            SendData(image_buffer[(i - x / 8) + (j - y) * (image_width / 8)]);
+            uint8_t c;
+            if (from_progmem) {
+                c = pgm_read_byte(&image_buffer[(i - x / 8) + (j - y) * (image_width / 8)]);
+            } else {
+                c = image_buffer[(i - x / 8) + (j - y) * (image_width / 8)];
+            }
+            SendData(c);
         }
     }
 }

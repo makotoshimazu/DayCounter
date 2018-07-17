@@ -80,7 +80,8 @@ public:
         int x,
         int y,
         int image_width,
-        int image_height
+        int image_height,
+        bool from_progmem = false
     );
     void SetFrameMemory(const unsigned char* image_buffer);
     void ClearFrameMemory(unsigned char color);
