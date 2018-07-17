@@ -22,5 +22,10 @@
 
 class DaysPaint {
  public:
-  static void PaintDaysToFrameMemory(int days, epd::Epd *display);
+  static void PaintDaysToFrameMemory(uint16_t days, epd::Epd *display);
+
+  // If |rollover| is zero, rollover will be blank.
+  // Valid |rollover| range is zero to 20.
+  static void PaintRolloverMarkerToFrameMemory(uint8_t rollover,
+                                               epd::Epd* display);
 };

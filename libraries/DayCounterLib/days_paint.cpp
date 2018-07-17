@@ -18,7 +18,7 @@
 #include "days_paint.h"
 
 #include "font_rancher.h"
-
+#include "rollover_marker.h"
 
 using namespace font_rancher;
 
@@ -138,8 +138,8 @@ void PaintDigitToFrameMemory(int digit, int num, epd::Epd *display) {
 
 }  // namespace
 
-void DaysPaint::PaintDaysToFrameMemory(int days, epd::Epd *display) {
-  if (days == 1000) {
+void DaysPaint::PaintDaysToFrameMemory(uint16_t days, epd::Epd *display) {
+  if (days > 0 && days % 1000 == 0) {
     display->SetFrameMemory(
         IMAGE_DATA_CONG,
         kImageDataCongWidthOffset,
@@ -149,7 +149,7 @@ void DaysPaint::PaintDaysToFrameMemory(int days, epd::Epd *display) {
         true /* from_progmem */);
     return;
   } else if (days > 1000) {
-    days = 999;
+    days = days % 1000;
   }
 
   // 3桁目
@@ -172,5 +172,18 @@ void DaysPaint::PaintDaysToFrameMemory(int days, epd::Epd *display) {
       kImageDataDaysWidth,
       kImageDataDaysHeight,
       true /* from_progmem */);
+}
 
+void DaysPaint::PaintRolloverMarkerToFrameMemory(uint8_t rollover,
+                                                 epd::Epd *display) {
+  if (rollover > 20)
+    rollover = 20;
+
+  display->SetFrameMemory(
+      kRolloverImages_P[rollover],
+      kRolloverMarkerWidthOffset,
+      kRolloverMarkerHeightOffset,
+      kRolloverMarkerWidth,
+      kRolloverMarkerHeight,
+      true /* from_progmem */);
 }
