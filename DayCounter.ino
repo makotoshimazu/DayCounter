@@ -1,7 +1,7 @@
 //
 // DayCounter.ino
 //
-// Copyright 2018 Makoto Shimazu
+// Copyright 2018 Makoto Shimazu, Murata Tetsuya
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -106,11 +106,12 @@ void SwitchStateChanged(SwitchObserver::State state) {
   }
 }
 
-void DrawDaysString(int16_t days) {
+void DrawDaysString(uint16_t days) {
   ScopedTimer s(__func__);
   g_epd.ClearFrameMemory(0xFF);
   DaysPaint::PaintDaysToFrameMemory(days, &g_epd);
-  DaysPaint::PaintRolloverMarkerToFrameMemory(days / 1000, &g_epd);
+  if (days % 1000 != 0)
+    DaysPaint::PaintRolloverMarkerToFrameMemory(days / 1000, &g_epd);
   g_epd.DisplayFrame();
 }
 
@@ -197,15 +198,9 @@ void loop() {
     Serial.print(" days");
     Serial.println();
 
-    // for debug
-    static uint8_t rollover = 0;
-    DrawDaysString(diff.days() + rollover++ * 1000);
-    // if (rollover == 20)
-    //   rollover = 0;
-
-    /* if (diff.days() != g_last_diff_days) { */
-    /*   g_last_diff_days = diff.days(); */
-    /*   DrawDaysString(diff.days()); */
-    /* } */
+    if (diff.days() != g_last_diff_days) {
+      g_last_diff_days = diff.days();
+      DrawDaysString(diff.days());
+    }
   }
 }

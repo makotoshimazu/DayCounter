@@ -138,8 +138,8 @@ void PaintDigitToFrameMemory(int digit, int num, epd::Epd *display) {
 
 }  // namespace
 
-void DaysPaint::PaintDaysToFrameMemory(int days, epd::Epd *display) {
-  if (days == 1000) {
+void DaysPaint::PaintDaysToFrameMemory(uint16_t days, epd::Epd *display) {
+  if (days > 0 && days % 1000 == 0) {
     display->SetFrameMemory(
         IMAGE_DATA_CONG,
         kImageDataCongWidthOffset,
