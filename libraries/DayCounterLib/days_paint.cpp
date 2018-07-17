@@ -149,7 +149,7 @@ void DaysPaint::PaintDaysToFrameMemory(int days, epd::Epd *display) {
         true /* from_progmem */);
     return;
   } else if (days > 1000) {
-    days = 999;
+    days = days % 1000;
   }
 
   // 3桁目
@@ -176,7 +176,7 @@ void DaysPaint::PaintDaysToFrameMemory(int days, epd::Epd *display) {
 
 void DaysPaint::PaintRolloverMarkerToFrameMemory(uint8_t rollover,
                                                  epd::Epd *display) {
-  if (rollover > 20)
+  if (rollover > 2)
     return;
 
   display->SetFrameMemory(

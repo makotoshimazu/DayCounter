@@ -110,7 +110,7 @@ void DrawDaysString(int16_t days) {
   ScopedTimer s(__func__);
   g_epd.ClearFrameMemory(0xFF);
   DaysPaint::PaintDaysToFrameMemory(days, &g_epd);
-  DaysPaint::PaintRolloverMarkerToFrameMemory(1, &g_epd);
+  DaysPaint::PaintRolloverMarkerToFrameMemory(days / 1000, &g_epd);
   g_epd.DisplayFrame();
 }
 
@@ -197,9 +197,15 @@ void loop() {
     Serial.print(" days");
     Serial.println();
 
-    if (diff.days() != g_last_diff_days) {
-      g_last_diff_days = diff.days();
-      DrawDaysString(diff.days());
-    }
+    // for debug
+    static uint8_t rollover = 0;
+    DrawDaysString(diff.days() + rollover++ * 1000);
+    if (rollover == 10)
+      rollover = 0;
+
+    /* if (diff.days() != g_last_diff_days) { */
+    /*   g_last_diff_days = diff.days(); */
+    /*   DrawDaysString(diff.days()); */
+    /* } */
   }
 }
