@@ -62,16 +62,16 @@ void PrintDateTime(const DateTime& dt) {
 
 void UpdateStartTime(const DateTime& dt) {
   {
-    ScopedTimer s("Put Time");
+    ScopedTimer s(PSTR("Put Time"));
     PersistentData::PutStartTime(dt);
   }
   {
-    ScopedTimer s("Get Time");
+    ScopedTimer s(PSTR("Get Time"));
     bool success = PersistentData::GetStartTime(&g_start_time);
     if (!success) {
-      Serial.println(
-          "EEPROM seems broken (typical reason is too many updates)...");
-      Serial.println("Counts days since this device is powered up.");
+      PSTRUtils::Println(
+          &Serial, PSTR("EEPROM seems broken (typical reason is too many updates)..."));
+      PSTRUtils::Println(&Serial, PSTR("Counts days since this device is powered up."));
       g_start_time = g_rtc.now();
     }
   }
@@ -82,16 +82,16 @@ void SwitchStateChanged(SwitchObserver::State state) {
   static uint8_t s_repeat_short_press_count = 0;
   switch(state) {
     case State::kOn:
-      Serial.println("on");
+      PSTRUtils::Println(&Serial, PSTR("on"));
       s_repeat_short_press_count++;
       break;
     case State::kLongOn:
-      Serial.println("on long");
+      PSTRUtils::Println(&Serial, PSTR("on long"));
       s_repeat_short_press_count = 0;
       UpdateStartTime(g_rtc.now());
       break;
     case State::kOff:
-      Serial.println("off");
+      PSTRUtils::Println(&Serial, PSTR("off"));
       s_repeat_short_press_count++;
       if (s_repeat_short_press_count >= 20) {
         // Pressed the button 10 times shortly.
@@ -100,14 +100,14 @@ void SwitchStateChanged(SwitchObserver::State state) {
       }
       break;
     case State::kLongOff:
-      Serial.println("off long");
+      PSTRUtils::Println(&Serial, PSTR("off long"));
       s_repeat_short_press_count = 0;
       break;
   }
 }
 
 void DrawDaysString(uint16_t days) {
-  ScopedTimer s(__func__);
+  ScopedTimer s(PSTR("DrawDaysString"));
   g_epd.ClearFrameMemory(0xFF);
   DaysPaint::PaintDaysToFrameMemory(days, &g_epd);
   if (days % 1000 != 0)
@@ -120,17 +120,17 @@ void DrawDaysString(uint16_t days) {
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Hello!");
-  ScopedTimer s("setup");
+  PSTRUtils::Println(&Serial, PSTR("Hello!"));
+  ScopedTimer s(PSTR("setup"));
 
   Wire.begin();
   g_rtc.begin();
   bool is_compiled_time_updated =
       PersistentData::UpdateCompiledTime(kCompiledTime);
   if (!g_rtc.is_running() || is_compiled_time_updated) {
-    Serial.print("RTC? ");
+    PSTRUtils::Print(&Serial, PSTR("RTC? "));
     Serial.print(!g_rtc.is_running());
-    Serial.print(", CompiledTime? ");
+    PSTRUtils::Print(&Serial, PSTR(", CompiledTime? "));
     Serial.println(is_compiled_time_updated);
     g_rtc.adjust(kCompiledTime);
   }
@@ -138,16 +138,16 @@ void setup() {
   g_switch_observer.Init();
 
   {
-    ScopedTimer s("EPD::Init()");
+    ScopedTimer s(PSTR("EPD::Init()"));
     if (g_epd.Init(epd::lut_full_update) != 0) {
-      Serial.println("EPD::Init() failed");
+      PSTRUtils::Println(&Serial, PSTR("EPD::Init() failed"));
       return;
     }
   }
 
   bool success;
   {
-    ScopedTimer s("Get Time");
+    ScopedTimer s(PSTR("Get Time"));
     success = PersistentData::GetStartTime(&g_start_time);
   }
   if (!success) {
@@ -156,7 +156,7 @@ void setup() {
     UpdateStartTime(kInitialTime);
   }
 
-  Serial.print("Start Time: ");
+  PSTRUtils::Print(&Serial, PSTR("Start Time: "));
   PrintDateTime(g_start_time);
   Serial.println();
 
@@ -186,16 +186,16 @@ void loop() {
     DateTime now = g_rtc.now();
     TimeDelta diff = now - g_start_time;
 
-    Serial.print('[');
+    PSTRUtils::Print(&Serial, PSTR("["));
     PrintDateTime(now);
-    Serial.print(']');
-    Serial.print(" Elapsed: ");
+    PSTRUtils::Print(&Serial, PSTR("]"));
+    PSTRUtils::Print(&Serial, PSTR(" Elapsed: "));
     char buf[20];
     sprintf(buf, "%8ld", diff.seconds());
     Serial.print(buf);
-    Serial.print(" sec, ");
+    PSTRUtils::Print(&Serial, PSTR(" sec, "));
     Serial.print(diff.days());
-    Serial.print(" days");
+    PSTRUtils::Print(&Serial, PSTR(" days"));
     Serial.println();
 
     if (diff.days() != g_last_diff_days) {
