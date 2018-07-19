@@ -19,11 +19,27 @@
 
 #include <Arduino.h>
 
-ScopedTimer::ScopedTimer(const char* tag) : start_us_(micros()), tag_(tag) {}
+ScopedTimer::ScopedTimer(const char* tag_P) : start_us_(micros()),
+                                              tag_P_(tag_P) {}
 
 ScopedTimer::~ScopedTimer() {
-  Serial.print(tag_);
-  Serial.print(": ");
+  PSTRUtils::Print(&Serial, tag_P_);
+  PSTRUtils::Print(&Serial, PSTR(": "));
   Serial.print(micros() - start_us_);
-  Serial.println(" us");
+  PSTRUtils::Println(&Serial, PSTR(" us"));
+}
+
+// static
+void PSTRUtils::Print(HardwareSerial* serial, const char *str_P) {
+  uint8_t c;
+  int16_t i = 0;
+  while (c = pgm_read_byte(&str_P[i++]),  c != '\0') {
+    serial->write(c);
+  }
+}
+
+// static
+void PSTRUtils::Println(HardwareSerial* serial, const char *str_P) {
+  Print(serial, str_P);
+  serial->println();
 }

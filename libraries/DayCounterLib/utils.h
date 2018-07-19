@@ -17,14 +17,23 @@
 
 #pragma once
 
+#include <avr/pgmspace.h>
 #include <stdint.h>
+
+class HardwareSerial;
 
 class ScopedTimer {
  public:
-  ScopedTimer(const char* tag);
+  ScopedTimer(const char* tag_P);
   ~ScopedTimer();
 
  private:
-  const char* tag_;
+  const char* tag_P_;
   uint32_t start_us_;
+};
+
+class PSTRUtils {
+ public:
+  static void Print(HardwareSerial* serial, const char *str_P);
+  static void Println(HardwareSerial* serial, const char *str_P);
 };
