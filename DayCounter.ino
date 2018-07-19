@@ -18,7 +18,6 @@
 
 #include <days_paint.h>
 #include <epd2in13.h>
-#include <epdpaint.h>
 #include <persistent_data.h>
 #include <RTClib.h>
 #include <switch_observer.h>
@@ -38,10 +37,6 @@ struct Color {
   static const int kWhite = 1;
 };
 
-// Image buffer to manipulate a part of display.
-// Size: 1024 bytes * 8 bits = 8192 pixels
-uint8_t g_image[1024];
-epd::Paint g_paint(g_image, 0, 0);
 epd::Epd g_epd;
 
 DateTime g_start_time;
